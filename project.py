@@ -28,11 +28,11 @@ df.drop(df[df['Gewicht in Tonnen'] == 0].index, inplace=True)
 df[df['Gewicht in Tonnen'] == 0].value_counts().sum()
 
 #check very small values
-print(df[df['Gewicht in Tonnen'] < 0.1].value_counts().sum())
+#print(df[df['Gewicht in Tonnen'] < 0.1].value_counts().sum())
 
 #check duplicates
 duplicates = df.duplicated()
-print(f"Number of duplicate rows: {duplicates.sum()}")
+#print(f"Number of duplicate rows: {duplicates.sum()}")
 
 #Visualize the outliers in a plot
 # plt.figure(figsize=(10, 6))
@@ -48,19 +48,23 @@ df[df['Gewicht in Tonnen'] > 35]
 #remove this outlier
 df.drop(df[df['Gewicht in Tonnen'] > 50].index, inplace=True)
 
+#Time series decomposition
+
 # Convert the date column to datetime
-df['Datum'] = pd.to_datetime(df['Datum'], format='%d.%m.%Y')
+df['Anlieferungsdatum'] = pd.to_datetime(df['Anlieferungsdatum'], utc=True)
 
 # Set the date column as the index
-df.set_index('Datum', inplace=True)
+df.set_index('Anlieferungsdatum', inplace=True)
 
-# Resample the data to monthly frequency, summing the weights
-monthly_data = df['Gewicht in Tonnen'].resample('M').sum()
+# Resample the data to daily frequency, summing the weights and keeping the "Material" column
+daily_data = df.groupby('Material').resample('D').sum().reset_index(level=0)
 
-# Perform seasonal decomposition
-decomposition = sm.tsa.seasonal_decompose(monthly_data, model='additive')
+print(daily_data.head())
 
-# Plot the decomposition
-fig = decomposition.plot()
-fig.set_size_inches(14, 10)
-plt.show()
+# # Perform seasonal decomposition
+# decomposition = sm.tsa.seasonal_decompose(monthly_data, model='additive')
+
+# # Plot the decomposition
+# fig = decomposition.plot()
+# fig.set_size_inches(14, 10)
+# plt.show()
