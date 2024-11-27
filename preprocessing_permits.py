@@ -91,5 +91,6 @@ for col in nan_columns:
 permits['Baubeginn'] = permits['Baubeginn'].notna().astype(int)
 permits['Bauende'] = permits['Bauende'].notna().astype(int)
 
+PERMITS = permits
 # Print the transformed DataFrame
-print(permits)
+print(PERMITS)
