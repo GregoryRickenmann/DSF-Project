@@ -7,8 +7,7 @@
 # rolling CV because you cannot shuffle time series data
 # Based on interpretation define features + fit ARIMA model 
 # calculate forecasting error (MSE?) and tune hyperparameters
-# check residuals to ensure no patterns (white noise)
-# validate model on test set
+# validate model on validation set
 
 #-->baseline prediction
 
@@ -16,3 +15,5 @@
 #normalize them to correct time scale
 #decompose
 #multivariate time series prediction via random forest 
+
+#important: split into train, test and validate!
