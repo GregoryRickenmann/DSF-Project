@@ -85,5 +85,6 @@ pedestrians = pedestrians[pedestrians["Total Pedestrians"] > 5]
 # Meaning that our data is not left- or right-skewed
 
 # Data is preprocessed
-print(pedestrians)
+PEDESTRIANS = pedestrians
+print(PEDESTRIANS)
 # Shape 2049 rows with 4 columns (Date, Day, Workday, Total Pedestrians)
