@@ -5,7 +5,7 @@ import statsmodels.api as sm
 
 
 
-df = pd.read_csv('deponieanlieferungen-tufentobel.csv', delimiter=';')
+df = pd.read_csv("data/deponieanlieferungen-tufentobel.csv", delimiter=';')
 
 #Check for missing values
 missing_values = df.isna().sum()
@@ -34,7 +34,7 @@ df[df['Gewicht in Tonnen'] == 0].value_counts().sum()
 duplicates = df.duplicated()
 #print(f"Number of duplicate rows: {duplicates.sum()}")
 
-#Visualize the outliers in a plot
+# #Visualize the outliers in a plot
 # plt.figure(figsize=(10, 6))
 # plt.boxplot(df['Gewicht in Tonnen'], vert=False)
 # plt.title('Boxplot of Gewicht in Tonnen')
@@ -56,13 +56,21 @@ df['Anlieferungsdatum'] = pd.to_datetime(df['Anlieferungsdatum'], utc=True)
 # Set the date column as the index
 df.set_index('Anlieferungsdatum', inplace=True)
 
-# Resample the data to daily frequency, summing the weights and keeping the "Material" column
-daily_data = df.groupby('Material').resample('D').sum().reset_index(level=0)
+# Resample the data to daily frequency, sum weights, and pivot the table
+daily_data = df.groupby([pd.Grouper(freq='D'), 'Material'])['Gewicht in Tonnen'].sum().unstack()
 
-print(daily_data.head())
+# Plot the daily data for each type of material
+# daily_data.plot(figsize=(14, 10))
+# plt.title('Daily Anlieferungen by Material')
+# plt.xlabel('Date')
+# plt.ylabel('Gewicht in Tonnen')
+# plt.legend(title='Material')
+# plt.show()
 
-# # Perform seasonal decomposition
-# decomposition = sm.tsa.seasonal_decompose(monthly_data, model='additive')
+# Perform seasonal decomposition
+daily_data.replace(np.nan, 0, inplace=True)
+
+decomposition = sm.tsa.seasonal_decompose(daily_data, model='additive', extrapolate_trend='freq')
 
 # # Plot the decomposition
 # fig = decomposition.plot()
