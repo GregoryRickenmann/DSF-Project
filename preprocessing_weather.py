@@ -36,4 +36,5 @@ weather = weather[weather["Date"] >= "2019-01-01"]
 #print(weather.duplicated().sum())
 
 # There are no NaN values or duplicates in the dataset left
-print(weather.head())
+WEATHER = weather
+print(WEATHER)
