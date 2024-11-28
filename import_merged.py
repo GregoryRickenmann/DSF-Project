@@ -5,7 +5,6 @@ import seaborn as sns
 
 from preprocessing_weather import WEATHER
 from preprocessing_pedestrians import PEDESTRIANS
-from BO9 import BO9
 from preprocessing_permits import PERMITS
 
 df = pd.read_csv("data/deponieanlieferungen-tufentobel.csv", delimiter=';')
