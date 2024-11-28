@@ -26,16 +26,16 @@ permits = permits[permits['BaustKanton'] == 'SG']
 filtered_data_no_9 = permits[~permits['BaustPLZ'].astype(str).str.startswith('9')]
 
 # Print the BaustKanton column from the filtered data. We do this to check if they are in St. Gallen
-print(filtered_data_no_9['BaustKanton']) # They are, so we keep them
+filtered_data_no_9['BaustKanton'] # They are, so we keep them
 
 # Here we check if the column "Baustadium" has only 1 value or more
-print(permits['Baustadium'].unique()) # It has only one (Baubewilligung erteilt), so we dont need it
+permits['Baustadium'].unique() # It has only one (Baubewilligung erteilt), so we dont need it
 
 # We check if "BaustadiumAlt" also only has 1 Value
-print(permits['BaustadiumAlt'].unique()) # Here we get different Values, so we keep it
+permits['BaustadiumAlt'].unique() # Here we get different Values, so we keep it
 
 # Check the first few rows of 'BaustadiumDatum' and 'BaustadiumDatumAlt' for format
-print(permits[['BaustadiumDatum', 'BaustadiumDatumAlt']].head()) # There are certain Values in the Dataframe that are like "Aug 2024". If we wanted to convert this to datetime it would output NaT
+permits[['BaustadiumDatum', 'BaustadiumDatumAlt']].head() # There are certain Values in the Dataframe that are like "Aug 2024". If we wanted to convert this to datetime it would output NaT
 
 # Here we fix the Problem of the different time notations
 # Function to handle the transformation of month-year to day-month-year and convert to datetime
@@ -56,22 +56,47 @@ permits['BaustadiumDatumAlt'] = fix_and_convert_dates(permits['BaustadiumDatumAl
 print(permits[['BaustadiumDatum', 'BaustadiumDatumAlt']].head())
 
 # Check for NaT in datetime columns
-print("Checking for NaT in BaustadiumDatum:")
-print(permits['BaustadiumDatum'].isna().sum())  # Sum of NaT values in the 'BaustadiumDatum' column
+permits['BaustadiumDatum'].isna().sum()  # Sum of NaT values in the 'BaustadiumDatum' column
 
-print("\nChecking for NaT in BaustadiumDatumAlt:")
-print(permits['BaustadiumDatumAlt'].isna().sum())  # Sum of NaT values in the 'BaustadiumDatumAlt' column
+permits['BaustadiumDatumAlt'].isna().sum()  # Sum of NaT values in the 'BaustadiumDatumAlt' column
 
-print(permits.dtypes)
+permits.dtypes
 
-# Now we only want following columns: Objektname, BaustKanton, BaustadiumDatum, BaustadiumAlt, BaustadiumDatumAlt, Baukosten, Baubeginn, Bauende
+# Now we only want following columns: BaustadiumDatum and Baukosten
 permits = permits[
-    ['Objektname', 'BaustKanton', 'BaustadiumDatum', 
-     'BaustadiumAlt', 'BaustadiumDatumAlt', 'Baukosten', 'Baubeginn', 'Bauende']
+    ['BaustadiumDatum', 'Baukosten']
 ]
 
-# Print the resulting DataFrame
-print(permits)
+# We notice that 'Baukosten' is an object, so we need to convert it to a float
+# First we need to remove the ' characters
+permits['Baukosten'] = permits['Baukosten'].str.replace("'", "")
+
+# Now we need to remove the 'Mio CHF'
+permits['Baukosten'] = permits['Baukosten'].str.replace("Mio CHF", "")
+
+# For values that have a bandwith, we take the average
+# For values that are not numbers, we convert them to NaN
+def convert_baukosten(value):
+    try:
+        if "-" in value:
+            value = value.split("-")
+            return (float(value[0]) + float(value[1])) / 2
+        else:
+            return float(value)
+    except ValueError:
+        return np.nan
+
+# Apply the function to the 'Baukosten' column
+permits['Baukosten'] = permits['Baukosten'].apply(convert_baukosten)
+
+# Check how many NaN values are in the 'Baukosten' column
+permits['Baukosten'].isna().sum()
+
+# Drop rows with NaN values in 'Baukosten' column
+permits = permits.dropna(subset=['Baukosten'])
+
+# Check the data types of the columns
+permits.dtypes
 
 # Identify columns that contain NaN values
 nan_columns = permits.columns[permits.isna().any()]
@@ -87,10 +112,31 @@ for col in nan_columns:
     print(f"Unique values (including NaN): {unique_values}")
     print(f"Number of NaN values: {nan_count}\n")
 
-# What we do now is, we transform the columns "Baubeginn", and "Bauende" to 1 (began/ended building) and 0 (didn't begin/end building)
-permits['Baubeginn'] = permits['Baubeginn'].notna().astype(int)
-permits['Bauende'] = permits['Bauende'].notna().astype(int)
+permits["Date"] = permits["BaustadiumDatum"]
+permits.drop(columns=["BaustadiumDatum"], inplace=True)
+
+# We notice that there are 1421 duplicates
+# For these values, we sum all the Baukosten values to get the total cost for that day
+daily_costs = permits.groupby('Date')['Baukosten'].sum().reset_index()
+
+# We then merge the daily_costs with the permits dataset to get the total costs for each day
+permits = pd.merge(permits, daily_costs, on="Date", how="left")
+# Now we drop dates that are duplicates, as we only need one of them, and can also drop the Baukosten column that is not needed anymore
+permits = permits.drop_duplicates(subset=["Date"])
+permits.drop(columns=["Baukosten_x"], inplace=True)
+
+# We then rename the Baukosten_y column to Total Costs
+permits.rename(columns={"Baukosten_y": "Total Costs"}, inplace=True)
+
+permits.describe()
+
+# We check for outliers with a boxplot
+sns.boxplot(data=permits, x='Total Costs')
+plt.show()
+
+# We notice that there are some outliers, but they might be relevant since it's possible that some construction projects are more expensive than others
+# Furthermore, it is also possible that on some days, there are more construction projects being permitted than on others, which would lead to higher costs
+
+# The data has been preprocessed
 
 PERMITS = permits
-# Print the transformed DataFrame
-print(PERMITS)
