@@ -1,13 +1,11 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 
-from preprocessing_weather import WEATHER
-from preprocessing_pedestrians import PEDESTRIANS
-from preprocessing_permits import PERMITS
+from preprocessing.preprocessing_weather import WEATHER
+from preprocessing.preprocessing_pedestrians import PEDESTRIANS
+from preprocessing.preprocessing_permits import PERMITS
 
-df = pd.read_csv("data/deponieanlieferungen-tufentobel.csv", delimiter=';')
+df = pd.read_csv("../data/deponieanlieferungen-tufentobel.csv", delimiter=';')
 #preprocessing of df (tüfentobel)
 
 #Check for missing values

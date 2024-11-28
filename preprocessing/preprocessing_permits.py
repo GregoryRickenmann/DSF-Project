@@ -138,5 +138,4 @@ plt.show()
 # Furthermore, it is also possible that on some days, there are more construction projects being permitted than on others, which would lead to higher costs
 
 # The data has been preprocessed
-
 PERMITS = permits
