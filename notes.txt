@@ -1,0 +1,3 @@
+- demean nur mit training
+- seasonal component auch nur von training
+- lieber log transformation (unabhängig von mean/std)
