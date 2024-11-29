@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # There are two datasets for pedestrians, one with data from March 2019 to June 2024 and one with data from June 2024 to Present
-pedestrians = pd.read_csv("../data/fussganger-stgaller-innenstadt-vadianstrasse-archivdaten.csv", delimiter=";", parse_dates=["datum_tag"])
-pedestrians2 = pd.read_csv("../data/fussganger-stgaller-innenstadt-vadianstrasse.csv", delimiter=";", parse_dates=["datum_tag"])       
+pedestrians = pd.read_csv("data/fussganger-stgaller-innenstadt-vadianstrasse-archivdaten.csv", delimiter=";", parse_dates=["datum_tag"])
+pedestrians2 = pd.read_csv("data/fussganger-stgaller-innenstadt-vadianstrasse.csv", delimiter=";", parse_dates=["datum_tag"])       
 
 #print(pedestrians.sort_values(by="datum_tag", ascending=True))
 #print(pedestrians2.sort_values(by="datum_tag", ascending=True))

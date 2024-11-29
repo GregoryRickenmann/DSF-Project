@@ -5,7 +5,7 @@ from preprocessing.preprocessing_weather import WEATHER
 from preprocessing.preprocessing_pedestrians import PEDESTRIANS
 from preprocessing.preprocessing_permits import PERMITS
 
-df = pd.read_csv("../data/deponieanlieferungen-tufentobel.csv", delimiter=';')
+df = pd.read_csv("data/deponieanlieferungen-tufentobel.csv", delimiter=';')
 #preprocessing of df (tüfentobel)
 
 #Check for missing values
@@ -72,3 +72,5 @@ new_features.drop(columns=['Date'], inplace=True)
 # Replaces NaN values with 0 
 new_features.replace(np.nan, 0, inplace=True)
 NEW_FEATURES = new_features
+
+print(NEW_FEATURES)
