@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart.js Sequential Animation</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+</head>
+<body>
+    <div id="chart-container">
+        <canvas id="myChart"></canvas>
+    </div>
+    <script>
+        let data = []; // Globally accessible variable
+
+        // Funktion zur Berechnung des Moving Average
+        function calculateMovingAverage(data, windowSize) {
+            const movingAverage = [];
+            for (let i = 0; i < data.length; i++) {
+                if (i < windowSize - 1) {
+                    // Weniger als "windowSize" Werte: Null oder keine Berechnung
+                    movingAverage.push(null);
+                } else {
+                    // Gleitender Durchschnitt berechnen
+                    const windowData = data.slice(i - windowSize + 1, i + 1);
+                    const average = windowData.reduce((sum, val) => sum + val, 0) / windowSize;
+                    movingAverage.push(average);
+                }
+            }
+            return movingAverage;
+        }
+
+        Papa.parse('daily_data.csv', {
+            download: true,
+            header: true, // Automatisch Header auslesen
+            complete: function(results) {
+            console.log(results.data); // Array mit den Daten
+            data = results.data.map(row => parseFloat(row[Object.keys(row)[1]])); // Zweite Spalte in eine Liste umwandeln
+            console.log(data); // Liste der zweiten Spalte
+
+            let ctx = document.getElementById('myChart').getContext('2d');
+
+            // Labels (X-Achse)
+            const labels = results.data.map(row => parseFloat(row[Object.keys(row)[0]]));;
+
+            const movingAverageData = calculateMovingAverage(data, 50);
+
+            // Animation
+            const totalDuration = 5000;
+            const delayBetweenPoints = totalDuration / data.length;
+            const previousY = (ctx) => ctx.index === 0 ? ctx.chart.scales.y.getPixelForValue(100) : ctx.chart.getDatasetMeta(ctx.datasetIndex).data[ctx.index - 1].getProps(['y'], true).y;
+            const animation = {
+            x: {
+                type: 'number',
+                easing: 'linear',
+                duration: delayBetweenPoints,
+                from: NaN, // the point is initially skipped
+                delay(ctx) {
+                if (ctx.type !== 'data' || ctx.xStarted) {
+                    return 0;
+                }
+                ctx.xStarted = true;
+                return ctx.index * delayBetweenPoints;
+                }
+            },
+            y: {
+                type: 'number',
+                easing: 'linear',
+                duration: delayBetweenPoints,
+                from: previousY,
+                delay(ctx) {
+                if (ctx.type !== 'data' || ctx.yStarted) {
+                    return 0;
+                }
+                ctx.yStarted = true;
+                return ctx.index * delayBetweenPoints;
+                }
+            }
+            };
+
+            // Farben
+            const COLORS = {
+                red: 'rgba(223, 5, 38, 0.2)',
+                blue: 'rgba(54, 162, 235, 1)',
+                black: 'rgba(0, 0, 0, 1)'
+            };
+
+            // Chart-Konfiguration
+            const config = {
+                type: 'line',
+                data: {
+                    labels: labels, // X-Achsenwerte
+                    datasets: [
+                        {
+                            label: 'Total Weight',
+                            borderColor: COLORS.red,
+                            borderWidth: 2,
+                            tension: 0,
+                            radius: 0,
+                            backgroundColor: COLORS.red,
+                            data: data // Y-Werte
+                        },
+                        {
+                            label: 'Moving Average (50-Day)',
+                            borderColor: COLORS.black,
+                            borderWidth: 2,
+                            tension: 0.4, // Glattere Linien für den Moving Average
+                            radius: 0,
+                            backgroundColor: COLORS.green,
+                            data: movingAverageData // Gleitender Durchschnitt
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    animation: animation,
+                    interaction: {
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                font: {
+                                    size: 24
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Time Series of Total Weight',
+                            font: {
+                                    size: 28
+                                }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'category', // Labels auf der X-Achse anzeigen
+                            position: 'bottom',
+                            title: {
+                                display: true,
+                                text: 'Date',
+                                font: {
+                                    size: 20
+                                }
+                            },
+                            ticks: {
+                                callback: function(value, index, ticks) {
+                                    // Nur jeden 7. Tick anzeigen
+                                    return index % 7 === 0 ? this.getLabelForValue(value) : '';
+                                },
+                                font: {
+                                    size: 20 // Größe der Ticks ändern
+                                }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Total Weight in Tonnes',
+                                font: {
+                                    size: 20
+                                },
+                            },
+                            ticks: {
+                                font: {
+                                    size: 20 // Größe der Ticks ändern
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            // Chart erstellen
+            const myChart = new Chart(ctx, config);
+            }
+        });
+    </script>
+</body>
+</html>

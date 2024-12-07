@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart.js Sequential Animation</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="chart-container">
+        <canvas id="myChart"></canvas>
+    </div>
+    <script>
+        const ctx = document.getElementById('myChart').getContext('2d');
+
+        // Daten
+        const data = [0.006689400881210814, 0.006158843262197577, 0.006847870883281738, 0.006170489488176506, 0.007343286230639906, 0.006884195841831132, 0.008153200902761578, 0.008006893788841486, 0.007906327015959847, 0.0073860398880044855];
+        const data2 = [0.17441170057772362, 0.09380726604707738, 0.05732407168553923, 0.1276012664044023, 0.048329484285396886, 0.11158132728288096, 0.05705378262289413, 0.061744903375869756, 0.05201464397974277, 0.1579835920756265];
+
+        // Labels (X-Achse)
+        const labels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+        // Farben
+        const COLORS = {
+            red: '#DF0526',
+            blue: 'rgba(54, 162, 235, 1)',
+            black: 'rgba(0, 0, 0, 1)'
+        };
+
+        // Chart-Konfiguration
+        const config = {
+            type: 'line',
+            data: {
+                labels: labels, // X-Achsenwerte
+                datasets: [
+                    {
+                        label: 'Train MSE',
+                        borderColor: COLORS.black,
+                        borderWidth: 2,
+                        tension: 0.2,
+                        radius: 3,
+                        backgroundColor: COLORS.black,
+                        data: data // Y-Werte
+                    },
+                    {
+                        label: 'Test MSE',
+                        borderColor: COLORS.red,
+                        borderWidth: 2,
+                        tension: 0.2,
+                        radius: 3,
+                        backgroundColor: COLORS.red,
+                        data: data2, // Y-Werte
+                        hidden: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                animation: {
+                    duration: 5000, // Animation für den gesamten Chart
+                    delay: (ctx) => {
+                        if (ctx.type !== 'data') {
+                            return 0;
+                        }
+                        return ctx.dataIndex * 200; // Verzögerung pro Punkt
+                    }
+                },
+                interaction: {
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            font: {
+                                size: 24
+                            }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Mean Squared Error for Train and Test Sets',
+                        font: {
+                                size: 28
+                            }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'category', // Labels auf der X-Achse anzeigen
+                        position: 'bottom',
+                        title: {
+                            display: true,
+                            text: 'Fold',
+                            font: {
+                                size: 20
+                            }
+                        },
+                        ticks: {
+                            font: {
+                                size: 20 // Größe der Ticks ändern
+                            }
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Mean Squared Error (MSE)',
+                            font: {
+                                size: 20
+                            }
+                        },
+                        ticks: {
+                            font: {
+                                size: 20 // Größe der Ticks ändern
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        // Chart erstellen
+        const myChart = new Chart(ctx, config);
+    </script>
+</body>
+</html>

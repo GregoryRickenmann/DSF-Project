@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart.js Sequential Animation</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="chart-container">
+        <canvas id="myChart"></canvas>
+    </div>
+    <script>
+        const ctx = document.getElementById('myChart').getContext('2d');
+
+        // Daten
+        const data = [0.011776939768912935, 0.012594810546843445, 0.01223392139611923, 0.011872526506095464, 0.010311626111771456, 0.009938582540725487, 0.009816019253995681, 0.009362014857033725, 0.009507988962278573, 0.009374580659188055];
+        const data2 = [0.4479535485447442, 0.15866388010513174, 0.06991958376038328, 0.05585074096467415, 0.07452729015248578, 0.0652932616949942, 0.07710059223479344, 0.08606163028141385, 0.058946628512552446, 0.07921924703096518];
+
+        // Labels (X-Achse)
+        const labels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+        // Animation
+        const totalDuration = 10000;
+        const delayBetweenPoints = totalDuration / data.length;
+        const previousY = (ctx) => ctx.index === 0 ? ctx.chart.scales.y.getPixelForValue(100) : ctx.chart.getDatasetMeta(ctx.datasetIndex).data[ctx.index - 1].getProps(['y'], true).y;
+        const animation = {
+        x: {
+            type: 'number',
+            easing: 'linear',
+            duration: delayBetweenPoints,
+            from: NaN, // the point is initially skipped
+            delay(ctx) {
+            if (ctx.type !== 'data' || ctx.xStarted) {
+                return 0;
+            }
+            ctx.xStarted = true;
+            return ctx.index * delayBetweenPoints;
+            }
+        },
+        y: {
+            type: 'number',
+            easing: 'linear',
+            duration: delayBetweenPoints,
+            from: previousY,
+            delay(ctx) {
+            if (ctx.type !== 'data' || ctx.yStarted) {
+                return 0;
+            }
+            ctx.yStarted = true;
+            return ctx.index * delayBetweenPoints;
+            }
+        }
+        };
+
+        // Farben
+        const COLORS = {
+            red: '#DF0526',
+            blue: 'rgba(54, 162, 235, 1)',
+            black: 'rgba(0, 0, 0, 1)'
+        };
+
+        // Chart-Konfiguration
+        const config = {
+            type: 'line',
+            data: {
+                labels: labels, // X-Achsenwerte
+                datasets: [
+                    {
+                        label: 'Train MSE',
+                        borderColor: COLORS.black,
+                        borderWidth: 2,
+                        tension: 0.2,
+                        radius: 3,
+                        backgroundColor: COLORS.black,
+                        data: data // Y-Werte
+                    },
+                    {
+                        label: 'Test MSE',
+                        borderColor: COLORS.red,
+                        borderWidth: 2,
+                        tension: 0.2,
+                        radius: 3,
+                        backgroundColor: COLORS.red,
+                        data: data2 // Y-Werte
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                animation: {
+                    duration: 5000, // Animation für den gesamten Chart
+                    delay: (ctx) => {
+                        if (ctx.type !== 'data') {
+                            return 0;
+                        }
+                        return ctx.dataIndex * 200; // Verzögerung pro Punkt
+                    }
+                },
+                interaction: {
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            font: {
+                                size: 24
+                            }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Test and Train MSE for predicting "Inertstoffe"',
+                        font: {
+                                size: 28
+                            }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'category', // Labels auf der X-Achse anzeigen
+                        position: 'bottom',
+                        title: {
+                            display: true,
+                            text: 'Fold',
+                            font: {
+                                size: 20
+                            }
+                        },
+                        ticks: {
+                            font: {
+                                size: 20 // Größe der Ticks ändern
+                            }
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Mean Squared Error (MSE)',
+                            font: {
+                                size: 20
+                            }
+                        },
+                        ticks: {
+                            font: {
+                                size: 20 // Größe der Ticks ändern
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        // Chart erstellen
+        const myChart = new Chart(ctx, config);
+    </script>
+</body>
+</html>

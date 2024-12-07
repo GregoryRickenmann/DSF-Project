@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart.js Sequential Animation</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+</head>
+<body>
+    <div id="chart-container">
+        <canvas id="myChart"></canvas>
+    </div>
+    <script>
+        let data = []; // Globally accessible variable
+        let data1 = [];
+        let data2 = [];
+        let data3 = [];
+
+        Papa.parse('daily_data_with_decomposition.csv', {
+            download: true,
+            header: true, // Automatisch Header auslesen
+            complete: function(results) {
+            console.log(results.data); // Array mit den Daten
+            data = results.data.map(row => parseFloat(row[Object.keys(row)[1]])); // Zweite Spalte in eine Liste umwandeln
+            data1 = results.data.map(row => parseFloat(row[Object.keys(row)[2]])); 
+            data2 = results.data.map(row => parseFloat(row[Object.keys(row)[3]])); 
+            data3 = results.data.map(row => parseFloat(row[Object.keys(row)[4]])); 
+            console.log(data); // Liste der zweiten Spalte
+
+            let ctx = document.getElementById('myChart').getContext('2d');
+
+            // Labels (X-Achse)
+            const labels = results.data.map(row => parseFloat(row[Object.keys(row)[0]]));;
+
+            // Animation
+            const totalDuration = 10000;
+            const delayBetweenPoints = totalDuration / data.length;
+            const previousY = (ctx) => ctx.index === 0 ? ctx.chart.scales.y.getPixelForValue(100) : ctx.chart.getDatasetMeta(ctx.datasetIndex).data[ctx.index - 1].getProps(['y'], true).y;
+            const animation = {
+            x: {
+                type: 'number',
+                easing: 'linear',
+                duration: delayBetweenPoints,
+                from: NaN, // the point is initially skipped
+                delay(ctx) {
+                if (ctx.type !== 'data' || ctx.xStarted) {
+                    return 0;
+                }
+                ctx.xStarted = true;
+                return ctx.index * delayBetweenPoints;
+                }
+            },
+            y: {
+                type: 'number',
+                easing: 'linear',
+                duration: delayBetweenPoints,
+                from: previousY,
+                delay(ctx) {
+                if (ctx.type !== 'data' || ctx.yStarted) {
+                    return 0;
+                }
+                ctx.yStarted = true;
+                return ctx.index * delayBetweenPoints;
+                }
+            }
+            };
+
+            // Farben
+            const COLORS = {
+                black: 'rgba(0, 0, 0, 0.1)',
+                darkRed: 'rgba(215, 40, 80, 0.4)',
+                lightRed: 'rgba(255, 159, 192, 0.7)',
+                superblack: 'rgba(0, 0, 0, 1)',
+            };
+
+            // Chart-Konfiguration
+            const config = {
+                type: 'line',
+                data: {
+                    labels: labels, // X-Achsenwerte
+                    datasets: [
+                        {
+                            label: 'Total Weight',
+                            borderColor: COLORS.black,
+                            borderWidth: 2,
+                            tension: 0,
+                            radius: 0,
+                            backgroundColor: COLORS.black,
+                            data: data, // Y-Werte
+                        },
+                        {
+                            label: 'Trend',
+                            borderColor: COLORS.darkRed,
+                            borderWidth: 2,
+                            tension: 0,
+                            radius: 0,
+                            backgroundColor: COLORS.darkRed,
+                            data: data1, // Y-Werte
+                            hidden: true
+                        },
+                        {
+                            label: 'Seasonal',
+                            borderColor: COLORS.lightRed,
+                            borderWidth: 2,
+                            tension: 0,
+                            radius: 0,
+                            backgroundColor: COLORS.lightRed,
+                            data: data2, // Y-Werte
+                            hidden: true
+                        },
+                        {
+                            label: 'Residual',
+                            borderColor: COLORS.superblack,
+                            borderWidth: 0,
+                            tension: 0,
+                            radius: 4,
+                            backgroundColor: COLORS.superblack,
+                            data: data3, // Y-Werte
+                            hidden: true,
+                            showLine: false, // Linie zwischen den Punkten entfernen
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    animation: null,
+                    interaction: {
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                font: {
+                                    size: 24
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Decomposition',
+                            font: {
+                                    size: 28
+                                }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'category', // Labels auf der X-Achse anzeigen
+                            position: 'bottom',
+                            title: {
+                                display: true,
+                                text: 'Date',
+                                font: {
+                                    size: 20
+                                }
+                            },
+                            ticks: {
+                                callback: function(value, index, ticks) {
+                                    // Nur jeden 7. Tick anzeigen
+                                    return index % 7 === 0 ? this.getLabelForValue(value) : '';
+                                },
+                                font: {
+                                    size: 20 // Größe der Ticks ändern
+                                }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Weight/Trend/Seasonal/Residual',
+                                font: {
+                                    size: 20
+                                },
+                            },
+                            ticks: {
+                                display: false,
+                                font: {
+                                    size: 20 // Größe der Ticks ändern
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            // Chart erstellen
+            const myChart = new Chart(ctx, config);
+            }
+        });
+    </script>
+</body>
+</html>
